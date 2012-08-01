@@ -1,9 +1,16 @@
 public class GHash<K,V> {
 	public static void main(final String[] args) {
-		GHash<String, String> ghash = new GHash<String, String>();
-		ghash.put("a", "b").put("b", "c");
-		expectEqual(ghash.get("b"), "c");
+		GHash<String, String> ghash = new GHash<String, String>(4);
+		ghash.put("a", "b").
+					put("b", "c").
+					put("c", "d").
+					put("d", "e").
+					put("e", "f");
 		expectEqual(ghash.get("a"), "b");
+		expectEqual(ghash.get("b"), "c");
+		expectEqual(ghash.get("c"), "d");
+		expectEqual(ghash.get("d"), "e");
+		expectEqual(ghash.get("e"), "f");
 		System.out.println(ghash);
 	}
 
@@ -26,13 +33,17 @@ public class GHash<K,V> {
 		table = new Entry[DEFAULT_INITIAL_CAPACITY];
 	}
 
+	public <K,V> GHash(int initialCapacity) {
+		table = new Entry[initialCapacity];
+	}
+
 	public GHash<K,V> put(K key, V value) {
 		table[key.hashCode()%table.length] = new Entry<K,V>(key, value);
 		return this;
 	}
 
 	public V get(K key) {
-		return table[key.hashCode()%table.length].value;
+		return (V)table[key.hashCode()%table.length].value;
 	}
 
 	public String toString() {
@@ -46,14 +57,21 @@ public class GHash<K,V> {
 	}
 
 	static class Entry<K,V> {
-		public K key;
-		public V value;
+		final K key;
+		final V value;
+		Entry<K,V> next;
+		
 		Entry(K key, V value) {
 			this.key = key;
 			this.value = value;
 		}
-		//public V getValue() { return value; }	
-		//public K getKey() { return key; }
+		Entry(K key, V value, Entry<K,V> next) {
+			this.key = key;
+			this.value = value;
+			this.next = next;
+		}
+		public V getValue() { return value; }	
+		public K getKey() { return key; }
 		public boolean equals(Entry<K,V> other) {
 			return key.equals(other.key) && value.equals(other.value);
 		}	
