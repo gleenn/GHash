@@ -38,7 +38,9 @@ public class GHash<K,V> {
 	}
 
 	public GHash<K,V> put(K key, V value) {
-		table[key.hashCode()%table.length] = new Entry<K,V>(key, value);
+		int index = key.hashCode() % table.length;
+		Entry<K,V> previous = table[index];
+		table[index] = new Entry<K,V>(key, value, table[index]);
 		return this;
 	}
 
@@ -47,12 +49,16 @@ public class GHash<K,V> {
 	}
 
 	public String toString() {
-		String result = "{";
+		String result = "{\n";
 		for(Entry e : table) {
-			result += e + ", ";
+			result += e;
+			Entry<K,V> next = e.next;
+			while(e.next) {
+				result += " " + e;
+			}
 		}	
 		result = result.substring(0, result.length()-2);
-		result += "}";
+		result += "\n}";
 		return result;
 	}
 
