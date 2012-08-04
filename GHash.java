@@ -1,11 +1,19 @@
+@SuppressWarnings({"unchecked"})
 public class GHash<K,V> {
 	public static void main(final String[] args) {
-		GHash<String, String> ghash = new GHash<String, String>(4);
+		for(int i=1; i<10; i++) {
+			testHash(i);
+		}
+	}
+
+	public static void testHash(int capacity) {
+		GHash<String, String> ghash = new GHash<String, String>(capacity);
 		ghash.put("a", "b").
 					put("b", "c").
 					put("c", "d").
 					put("d", "e").
 					put("e", "f");
+
 		expectEqual(ghash.get("a"), "b");
 		expectEqual(ghash.get("b"), "c");
 		expectEqual(ghash.get("c"), "d");
@@ -46,20 +54,24 @@ public class GHash<K,V> {
 	}
 
 	public V get(K key) {
-		return (V)table[key.hashCode()%table.length].value;
+		Entry<K,V> e = table[key.hashCode()%table.length];
+		for(;e != null; e = e.next) {
+			if(e.key.equals(key)) return e.value;
+		}
+		return null;
 	}
 
 	public String toString() {
 		StringBuilder result = new StringBuilder("{\n");
+		int i = 0;
 		for(Entry<K,V> e : table) {
-			result.append(e);
-			for(e = e.next; e != null; e = e.next) {
-				result.append(" " + e + "\n");
+			result.append(" [" + i++ + "]" );
+			for(; e != null; e = e.next) {
+				result.append(" " + e);
 			}
 			result.append("\n");
 		}	
-		//result.delete(result.length()-2, result.length());
-		result.append("\n}");
+		result.append("}");
 		return result.toString();
 	}
 
