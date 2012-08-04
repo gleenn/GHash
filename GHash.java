@@ -11,6 +11,7 @@ public class GHash<K,V> {
 		expectEqual(ghash.get("c"), "d");
 		expectEqual(ghash.get("d"), "e");
 		expectEqual(ghash.get("e"), "f");
+		System.out.println();
 		System.out.println(ghash);
 	}
 
@@ -49,17 +50,17 @@ public class GHash<K,V> {
 	}
 
 	public String toString() {
-		String result = "{\n";
-		for(Entry e : table) {
-			result += e;
-			Entry<K,V> next = e.next;
-			while(e.next) {
-				result += " " + e;
+		StringBuilder result = new StringBuilder("{\n");
+		for(Entry<K,V> e : table) {
+			result.append(e);
+			for(e = e.next; e != null; e = e.next) {
+				result.append(" " + e + "\n");
 			}
+			result.append("\n");
 		}	
-		result = result.substring(0, result.length()-2);
-		result += "\n}";
-		return result;
+		//result.delete(result.length()-2, result.length());
+		result.append("\n}");
+		return result.toString();
 	}
 
 	static class Entry<K,V> {
@@ -81,6 +82,6 @@ public class GHash<K,V> {
 		public boolean equals(Entry<K,V> other) {
 			return key.equals(other.key) && value.equals(other.value);
 		}	
-		public String toString() { return key + "=" + value; }
+		public String toString() { return "(" + key + " => " + value + ")"; }
 	}	
 }
