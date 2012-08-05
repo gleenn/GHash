@@ -1,0 +1,1087 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!-- saved from url=(0058)http://www.docjar.com/html/api/java/util/HashMap.java.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>java.util: HashMap.java</title>
+</head>
+<body style="padding:0 0 0 0;margin:0 0 0 0">
+<div style="width:100%;background-color:#ddeeff;border:1px solid #ccddee;margin:0 0 0 0;padding:2px 2px 2px 2px">
+<div style="float:right"><a href="http://del.icio.us/post" onclick="window.open(&#39;http://del.icio.us/post?v=4&amp;noui&amp;jump=close&amp;url=&#39;+encodeURIComponent(location.href)+&#39;&amp;title=&#39;+encodeURIComponent(document.title), &#39;delicious&#39;,&#39;toolbar=no,width=700,height=400&#39;); return false;"><img src="./java.util.HashMap.java_files/delicious.small.gif" border="0"> Save This Page</a></div>
+<a href="http://www.docjar.com/">Home</a> » <a href="http://www.docjar.com/projects/openjdk-7-java.html">openjdk-7</a> » java »  <a href="http://www.docjar.com/docs/api/java/util/package-index.html">util</a> » 
+ [<a href="http://www.docjar.com/docs/api/java/util/HashMap.html">javadoc</a> | source]
+</div>
+<pre><a name="1">    1 &nbsp; /*
+    2 &nbsp;  * Copyright (c) 1997, 2010, Oracle and/or its affiliates. All rights reserved.
+    3 &nbsp;  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+    4 &nbsp;  *
+    5 &nbsp;  * This code is free software; you can redistribute it and/or modify it
+    6 &nbsp;  * under the terms of the GNU General Public License version 2 only, as
+    7 &nbsp;  * published by the Free Software Foundation.  Oracle designates this
+    8 &nbsp;  * particular file as subject to the "Classpath" exception as provided
+    9 &nbsp;  * by Oracle in the LICENSE file that accompanied this code.
+   10 &nbsp;  *
+</a><a name="11">   11 &nbsp;  * This code is distributed in the hope that it will be useful, but WITHOUT
+   12 &nbsp;  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   13 &nbsp;  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   14 &nbsp;  * version 2 for more details (a copy is included in the LICENSE file that
+   15 &nbsp;  * accompanied this code).
+   16 &nbsp;  *
+   17 &nbsp;  * You should have received a copy of the GNU General Public License version
+   18 &nbsp;  * 2 along with this work; if not, write to the Free Software Foundation,
+   19 &nbsp;  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+   20 &nbsp;  *
+</a><a name="21">   21 &nbsp;  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+   22 &nbsp;  * or visit www.oracle.com if you need additional information or have any
+   23 &nbsp;  * questions.
+   24 &nbsp;  */
+   25 &nbsp; 
+   26 &nbsp; <span class="kw">package</span> </a><a href="http://www.docjar.com/docs/api/java/util/package-index.html">java.util</a>;
+   27 &nbsp; <span class="kw">import</span> <a href="http://www.docjar.com/docs/api/java/io/package-index.html">java.io</a>;
+   28 &nbsp; 
+   29 &nbsp; /**
+   30 &nbsp;  * Hash table based implementation of the &lt;tt&gt;Map&lt;/tt&gt; interface.  This
+<a name="31">   31 &nbsp;  * implementation provides all of the optional map operations, and permits
+   32 &nbsp;  * &lt;tt&gt;null&lt;/tt&gt; values and the &lt;tt&gt;null&lt;/tt&gt; key.  (The &lt;tt&gt;HashMap&lt;/tt&gt;
+   33 &nbsp;  * class is roughly equivalent to &lt;tt&gt;Hashtable&lt;/tt&gt;, except that it is
+   34 &nbsp;  * unsynchronized and permits nulls.)  This class makes no guarantees as to
+   35 &nbsp;  * the order of the map; in particular, it does not guarantee that the order
+   36 &nbsp;  * will remain constant over time.
+   37 &nbsp;  *
+   38 &nbsp;  * &lt;p&gt;This implementation provides constant-time performance for the basic
+   39 &nbsp;  * operations (&lt;tt&gt;get&lt;/tt&gt; and &lt;tt&gt;put&lt;/tt&gt;), assuming the hash function
+   40 &nbsp;  * disperses the elements properly among the buckets.  Iteration over
+</a><a name="41">   41 &nbsp;  * collection views requires time proportional to the "capacity" of the
+   42 &nbsp;  * &lt;tt&gt;HashMap&lt;/tt&gt; instance (the number of buckets) plus its size (the number
+   43 &nbsp;  * of key-value mappings).  Thus, it's very important not to set the initial
+   44 &nbsp;  * capacity too high (or the load factor too low) if iteration performance is
+   45 &nbsp;  * important.
+   46 &nbsp;  *
+   47 &nbsp;  * &lt;p&gt;An instance of &lt;tt&gt;HashMap&lt;/tt&gt; has two parameters that affect its
+   48 &nbsp;  * performance: &lt;i&gt;initial capacity&lt;/i&gt; and &lt;i&gt;load factor&lt;/i&gt;.  The
+   49 &nbsp;  * &lt;i&gt;capacity&lt;/i&gt; is the number of buckets in the hash table, and the initial
+   50 &nbsp;  * capacity is simply the capacity at the time the hash table is created.  The
+</a><a name="51">   51 &nbsp;  * &lt;i&gt;load factor&lt;/i&gt; is a measure of how full the hash table is allowed to
+   52 &nbsp;  * get before its capacity is automatically increased.  When the number of
+   53 &nbsp;  * entries in the hash table exceeds the product of the load factor and the
+   54 &nbsp;  * current capacity, the hash table is &lt;i&gt;rehashed&lt;/i&gt; (that is, internal data
+   55 &nbsp;  * structures are rebuilt) so that the hash table has approximately twice the
+   56 &nbsp;  * number of buckets.
+   57 &nbsp;  *
+   58 &nbsp;  * &lt;p&gt;As a general rule, the default load factor (.75) offers a good tradeoff
+   59 &nbsp;  * between time and space costs.  Higher values decrease the space overhead
+   60 &nbsp;  * but increase the lookup cost (reflected in most of the operations of the
+</a><a name="61">   61 &nbsp;  * &lt;tt&gt;HashMap&lt;/tt&gt; class, including &lt;tt&gt;get&lt;/tt&gt; and &lt;tt&gt;put&lt;/tt&gt;).  The
+   62 &nbsp;  * expected number of entries in the map and its load factor should be taken
+   63 &nbsp;  * into account when setting its initial capacity, so as to minimize the
+   64 &nbsp;  * number of rehash operations.  If the initial capacity is greater
+   65 &nbsp;  * than the maximum number of entries divided by the load factor, no
+   66 &nbsp;  * rehash operations will ever occur.
+   67 &nbsp;  *
+   68 &nbsp;  * &lt;p&gt;If many mappings are to be stored in a &lt;tt&gt;HashMap&lt;/tt&gt; instance,
+   69 &nbsp;  * creating it with a sufficiently large capacity will allow the mappings to
+   70 &nbsp;  * be stored more efficiently than letting it perform automatic rehashing as
+</a><a name="71">   71 &nbsp;  * needed to grow the table.
+   72 &nbsp;  *
+   73 &nbsp;  * &lt;p&gt;&lt;strong&gt;Note that this implementation is not synchronized.&lt;/strong&gt;
+   74 &nbsp;  * If multiple threads access a hash map concurrently, and at least one of
+   75 &nbsp;  * the threads modifies the map structurally, it &lt;i&gt;must&lt;/i&gt; be
+   76 &nbsp;  * synchronized externally.  (A structural modification is any operation
+   77 &nbsp;  * that adds or deletes one or more mappings; merely changing the value
+   78 &nbsp;  * associated with a key that an instance already contains is not a
+   79 &nbsp;  * structural modification.)  This is typically accomplished by
+   80 &nbsp;  * synchronizing on some object that naturally encapsulates the map.
+</a><a name="81">   81 &nbsp;  *
+   82 &nbsp;  * If no such object exists, the map should be "wrapped" using the
+   83 &nbsp;  * {@link Collections#synchronizedMap Collections.synchronizedMap}
+   84 &nbsp;  * method.  This is best done at creation time, to prevent accidental
+   85 &nbsp;  * unsynchronized access to the map:&lt;pre&gt;
+   86 &nbsp;  *   Map m = Collections.synchronizedMap(new HashMap(...));&lt;/pre&gt;
+   87 &nbsp;  *
+   88 &nbsp;  * &lt;p&gt;The iterators returned by all of this class's "collection view methods"
+   89 &nbsp;  * are &lt;i&gt;fail-fast&lt;/i&gt;: if the map is structurally modified at any time after
+   90 &nbsp;  * the iterator is created, in any way except through the iterator's own
+</a><a name="91">   91 &nbsp;  * &lt;tt&gt;remove&lt;/tt&gt; method, the iterator will throw a
+   92 &nbsp;  * {@link ConcurrentModificationException}.  Thus, in the face of concurrent
+   93 &nbsp;  * modification, the iterator fails quickly and cleanly, rather than risking
+   94 &nbsp;  * arbitrary, non-deterministic behavior at an undetermined time in the
+   95 &nbsp;  * future.
+   96 &nbsp;  *
+   97 &nbsp;  * &lt;p&gt;Note that the fail-fast behavior of an iterator cannot be guaranteed
+   98 &nbsp;  * as it is, generally speaking, impossible to make any hard guarantees in the
+   99 &nbsp;  * presence of unsynchronized concurrent modification.  Fail-fast iterators
+  100 &nbsp;  * throw &lt;tt&gt;ConcurrentModificationException&lt;/tt&gt; on a best-effort basis.
+</a><a name="101">  101 &nbsp;  * Therefore, it would be wrong to write a program that depended on this
+  102 &nbsp;  * exception for its correctness: &lt;i&gt;the fail-fast behavior of iterators
+  103 &nbsp;  * should be used only to detect bugs.&lt;/i&gt;
+  104 &nbsp;  *
+  105 &nbsp;  * &lt;p&gt;This class is a member of the
+  106 &nbsp;  * &lt;a href="{@docRoot}/../technotes/guides/collections/index.html"&gt;
+  107 &nbsp;  * Java Collections Framework&lt;/a&gt;.
+  108 &nbsp;  *
+  109 &nbsp;  * @param &lt;K&gt; the type of keys maintained by this map
+  110 &nbsp;  * @param &lt;V&gt; the type of mapped values
+</a><a name="111">  111 &nbsp;  *
+  112 &nbsp;  * @author  Doug Lea
+  113 &nbsp;  * @author  Josh Bloch
+  114 &nbsp;  * @author  Arthur van Hoff
+  115 &nbsp;  * @author  Neal Gafter
+  116 &nbsp;  * @see     Object#hashCode()
+  117 &nbsp;  * @see     Collection
+  118 &nbsp;  * @see     Map
+  119 &nbsp;  * @see     TreeMap
+  120 &nbsp;  * @see     Hashtable
+</a><a name="121">  121 &nbsp;  * @since   1.2
+  122 &nbsp;  */
+  123 &nbsp; 
+  124 &nbsp; public class HashMap&lt;K,V&gt;
+  125 &nbsp;     extends AbstractMap&lt;K,V&gt;
+  126 &nbsp;     implements Map&lt;K,V&gt;, Cloneable, Serializable
+  127 &nbsp; {
+  128 &nbsp; 
+  129 &nbsp;     /**
+  130 &nbsp;      * The default initial capacity - MUST be a power of two.
+</a><a name="131">  131 &nbsp;      */
+  132 &nbsp;     static final int DEFAULT_INITIAL_CAPACITY = 16;
+  133 &nbsp; 
+  134 &nbsp;     /**
+  135 &nbsp;      * The maximum capacity, used if a higher value is implicitly specified
+  136 &nbsp;      * by either of the constructors with arguments.
+  137 &nbsp;      * MUST be a power of two &lt;= 1&lt;&lt;30.
+  138 &nbsp;      */
+  139 &nbsp;     static final int MAXIMUM_CAPACITY = 1 &lt;&lt; 30;
+  140 &nbsp; 
+</a><a name="141">  141 &nbsp;     /**
+  142 &nbsp;      * The load factor used when none specified in constructor.
+  143 &nbsp;      */
+  144 &nbsp;     static final float DEFAULT_LOAD_FACTOR = 0.75f;
+  145 &nbsp; 
+  146 &nbsp;     /**
+  147 &nbsp;      * The table, resized as necessary. Length MUST Always be a power of two.
+  148 &nbsp;      */
+  149 &nbsp;     transient Entry[] table;
+  150 &nbsp; 
+</a><a name="151">  151 &nbsp;     /**
+  152 &nbsp;      * The number of key-value mappings contained in this map.
+  153 &nbsp;      */
+  154 &nbsp;     transient int size;
+  155 &nbsp; 
+  156 &nbsp;     /**
+  157 &nbsp;      * The next size value at which to resize (capacity * load factor).
+  158 &nbsp;      * @serial
+  159 &nbsp;      */
+  160 &nbsp;     int threshold;
+</a><a name="161">  161 &nbsp; 
+  162 &nbsp;     /**
+  163 &nbsp;      * The load factor for the hash table.
+  164 &nbsp;      *
+  165 &nbsp;      * @serial
+  166 &nbsp;      */
+  167 &nbsp;     final float loadFactor;
+  168 &nbsp; 
+  169 &nbsp;     /**
+  170 &nbsp;      * The number of times this HashMap has been structurally modified
+</a><a name="171">  171 &nbsp;      * Structural modifications are those that change the number of mappings in
+  172 &nbsp;      * the HashMap or otherwise modify its internal structure (e.g.,
+  173 &nbsp;      * rehash).  This field is used to make iterators on Collection-views of
+  174 &nbsp;      * the HashMap fail-fast.  (See ConcurrentModificationException).
+  175 &nbsp;      */
+  176 &nbsp;     transient int modCount;
+  177 &nbsp; 
+  178 &nbsp;     /**
+  179 &nbsp;      * Constructs an empty &lt;tt&gt;HashMap&lt;/tt&gt; with the specified initial
+  180 &nbsp;      * capacity and load factor.
+</a><a name="181">  181 &nbsp;      *
+  182 &nbsp;      * @param  initialCapacity the initial capacity
+  183 &nbsp;      * @param  loadFactor      the load factor
+  184 &nbsp;      * @throws IllegalArgumentException if the initial capacity is negative
+  185 &nbsp;      *         or the load factor is nonpositive
+  186 &nbsp;      */
+  187 &nbsp;     public HashMap(int initialCapacity, float loadFactor) {
+  188 &nbsp;         if (initialCapacity &lt; 0)
+  189 &nbsp;             throw new IllegalArgumentException("Illegal initial capacity: " +
+  190 &nbsp;                                                initialCapacity);
+</a><a name="191">  191 &nbsp;         if (initialCapacity &gt; MAXIMUM_CAPACITY)
+  192 &nbsp;             initialCapacity = MAXIMUM_CAPACITY;
+  193 &nbsp;         if (loadFactor &lt;= 0 || Float.isNaN(loadFactor))
+  194 &nbsp;             throw new IllegalArgumentException("Illegal load factor: " +
+  195 &nbsp;                                                loadFactor);
+  196 &nbsp; 
+  197 &nbsp;         // Find a power of 2 &gt;= initialCapacity
+  198 &nbsp;         int capacity = 1;
+  199 &nbsp;         while (capacity &lt; initialCapacity)
+  200 &nbsp;             capacity &lt;&lt;= 1;
+</a><a name="201">  201 &nbsp; 
+  202 &nbsp;         this.loadFactor = loadFactor;
+  203 &nbsp;         threshold = (int)(capacity * loadFactor);
+  204 &nbsp;         table = new Entry[capacity];
+  205 &nbsp;         init();
+  206 &nbsp;     }
+  207 &nbsp; 
+  208 &nbsp;     /**
+  209 &nbsp;      * Constructs an empty &lt;tt&gt;HashMap&lt;/tt&gt; with the specified initial
+  210 &nbsp;      * capacity and the default load factor (0.75).
+</a><a name="211">  211 &nbsp;      *
+  212 &nbsp;      * @param  initialCapacity the initial capacity.
+  213 &nbsp;      * @throws IllegalArgumentException if the initial capacity is negative.
+  214 &nbsp;      */
+  215 &nbsp;     public HashMap(int initialCapacity) {
+  216 &nbsp;         this(initialCapacity, DEFAULT_LOAD_FACTOR);
+  217 &nbsp;     }
+  218 &nbsp; 
+  219 &nbsp;     /**
+  220 &nbsp;      * Constructs an empty &lt;tt&gt;HashMap&lt;/tt&gt; with the default initial capacity
+</a><a name="221">  221 &nbsp;      * (16) and the default load factor (0.75).
+  222 &nbsp;      */
+  223 &nbsp;     public HashMap() {
+  224 &nbsp;         this.loadFactor = DEFAULT_LOAD_FACTOR;
+  225 &nbsp;         threshold = (int)(DEFAULT_INITIAL_CAPACITY * DEFAULT_LOAD_FACTOR);
+  226 &nbsp;         table = new Entry[DEFAULT_INITIAL_CAPACITY];
+  227 &nbsp;         init();
+  228 &nbsp;     }
+  229 &nbsp; 
+  230 &nbsp;     /**
+</a><a name="231">  231 &nbsp;      * Constructs a new &lt;tt&gt;HashMap&lt;/tt&gt; with the same mappings as the
+  232 &nbsp;      * specified &lt;tt&gt;Map&lt;/tt&gt;.  The &lt;tt&gt;HashMap&lt;/tt&gt; is created with
+  233 &nbsp;      * default load factor (0.75) and an initial capacity sufficient to
+  234 &nbsp;      * hold the mappings in the specified &lt;tt&gt;Map&lt;/tt&gt;.
+  235 &nbsp;      *
+  236 &nbsp;      * @param   m the map whose mappings are to be placed in this map
+  237 &nbsp;      * @throws  NullPointerException if the specified map is null
+  238 &nbsp;      */
+  239 &nbsp;     public HashMap(Map&lt;? extends K, ? extends V&gt; m) {
+  240 &nbsp;         this(Math.max((int) (m.size() / DEFAULT_LOAD_FACTOR) + 1,
+</a><a name="241">  241 &nbsp;                       DEFAULT_INITIAL_CAPACITY), DEFAULT_LOAD_FACTOR);
+  242 &nbsp;         putAllForCreate(m);
+  243 &nbsp;     }
+  244 &nbsp; 
+  245 &nbsp;     // internal utilities
+  246 &nbsp; 
+  247 &nbsp;     /**
+  248 &nbsp;      * Initialization hook for subclasses. This method is called
+  249 &nbsp;      * in all constructors and pseudo-constructors (clone, readObject)
+  250 &nbsp;      * after HashMap has been initialized but before any entries have
+</a><a name="251">  251 &nbsp;      * been inserted.  (In the absence of this method, readObject would
+  252 &nbsp;      * require explicit knowledge of subclasses.)
+  253 &nbsp;      */
+  254 &nbsp;     void init() {
+  255 &nbsp;     }
+  256 &nbsp; 
+  257 &nbsp;     /**
+  258 &nbsp;      * Applies a supplemental hash function to a given hashCode, which
+  259 &nbsp;      * defends against poor quality hash functions.  This is critical
+  260 &nbsp;      * because HashMap uses power-of-two length hash tables, that
+</a><a name="261">  261 &nbsp;      * otherwise encounter collisions for hashCodes that do not differ
+  262 &nbsp;      * in lower bits. Note: Null keys always map to hash 0, thus index 0.
+  263 &nbsp;      */
+  264 &nbsp;     static int hash(int h) {
+  265 &nbsp;         // This function ensures that hashCodes that differ only by
+  266 &nbsp;         // constant multiples at each bit position have a bounded
+  267 &nbsp;         // number of collisions (approximately 8 at default load factor).
+  268 &nbsp;         h ^= (h &gt;&gt;&gt; 20) ^ (h &gt;&gt;&gt; 12);
+  269 &nbsp;         return h ^ (h &gt;&gt;&gt; 7) ^ (h &gt;&gt;&gt; 4);
+  270 &nbsp;     }
+</a><a name="271">  271 &nbsp; 
+  272 &nbsp;     /**
+  273 &nbsp;      * Returns index for hash code h.
+  274 &nbsp;      */
+  275 &nbsp;     static int indexFor(int h, int length) {
+  276 &nbsp;         return h &amp; (length-1);
+  277 &nbsp;     }
+  278 &nbsp; 
+  279 &nbsp;     /**
+  280 &nbsp;      * Returns the number of key-value mappings in this map.
+</a><a name="281">  281 &nbsp;      *
+  282 &nbsp;      * @return the number of key-value mappings in this map
+  283 &nbsp;      */
+  284 &nbsp;     public int size() {
+  285 &nbsp;         return size;
+  286 &nbsp;     }
+  287 &nbsp; 
+  288 &nbsp;     /**
+  289 &nbsp;      * Returns &lt;tt&gt;true&lt;/tt&gt; if this map contains no key-value mappings.
+  290 &nbsp;      *
+</a><a name="291">  291 &nbsp;      * @return &lt;tt&gt;true&lt;/tt&gt; if this map contains no key-value mappings
+  292 &nbsp;      */
+  293 &nbsp;     public boolean isEmpty() {
+  294 &nbsp;         return size == 0;
+  295 &nbsp;     }
+  296 &nbsp; 
+  297 &nbsp;     /**
+  298 &nbsp;      * Returns the value to which the specified key is mapped,
+  299 &nbsp;      * or {@code null} if this map contains no mapping for the key.
+  300 &nbsp;      *
+</a><a name="301">  301 &nbsp;      * &lt;p&gt;More formally, if this map contains a mapping from a key
+  302 &nbsp;      * {@code k} to a value {@code v} such that {@code (key==null ? k==null :
+  303 &nbsp;      * key.equals(k))}, then this method returns {@code v}; otherwise
+  304 &nbsp;      * it returns {@code null}.  (There can be at most one such mapping.)
+  305 &nbsp;      *
+  306 &nbsp;      * &lt;p&gt;A return value of {@code null} does not &lt;i&gt;necessarily&lt;/i&gt;
+  307 &nbsp;      * indicate that the map contains no mapping for the key; it's also
+  308 &nbsp;      * possible that the map explicitly maps the key to {@code null}.
+  309 &nbsp;      * The {@link #containsKey containsKey} operation may be used to
+  310 &nbsp;      * distinguish these two cases.
+</a><a name="311">  311 &nbsp;      *
+  312 &nbsp;      * @see #put(Object, Object)
+  313 &nbsp;      */
+  314 &nbsp;     public V get(Object key) {
+  315 &nbsp;         if (key == null)
+  316 &nbsp;             return getForNullKey();
+  317 &nbsp;         int hash = hash(key.hashCode());
+  318 &nbsp;         for (Entry&lt;K,V&gt; e = table[indexFor(hash, table.length)];
+  319 &nbsp;              e != null;
+  320 &nbsp;              e = e.next) {
+</a><a name="321">  321 &nbsp;             Object k;
+  322 &nbsp;             if (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k)))
+  323 &nbsp;                 return e.value;
+  324 &nbsp;         }
+  325 &nbsp;         return null;
+  326 &nbsp;     }
+  327 &nbsp; 
+  328 &nbsp;     /**
+  329 &nbsp;      * Offloaded version of get() to look up null keys.  Null keys map
+  330 &nbsp;      * to index 0.  This null case is split out into separate methods
+</a><a name="331">  331 &nbsp;      * for the sake of performance in the two most commonly used
+  332 &nbsp;      * operations (get and put), but incorporated with conditionals in
+  333 &nbsp;      * others.
+  334 &nbsp;      */
+  335 &nbsp;     private V getForNullKey() {
+  336 &nbsp;         for (Entry&lt;K,V&gt; e = table[0]; e != null; e = e.next) {
+  337 &nbsp;             if (e.key == null)
+  338 &nbsp;                 return e.value;
+  339 &nbsp;         }
+  340 &nbsp;         return null;
+</a><a name="341">  341 &nbsp;     }
+  342 &nbsp; 
+  343 &nbsp;     /**
+  344 &nbsp;      * Returns &lt;tt&gt;true&lt;/tt&gt; if this map contains a mapping for the
+  345 &nbsp;      * specified key.
+  346 &nbsp;      *
+  347 &nbsp;      * @param   key   The key whose presence in this map is to be tested
+  348 &nbsp;      * @return &lt;tt&gt;true&lt;/tt&gt; if this map contains a mapping for the specified
+  349 &nbsp;      * key.
+  350 &nbsp;      */
+</a><a name="351">  351 &nbsp;     public boolean containsKey(Object key) {
+  352 &nbsp;         return getEntry(key) != null;
+  353 &nbsp;     }
+  354 &nbsp; 
+  355 &nbsp;     /**
+  356 &nbsp;      * Returns the entry associated with the specified key in the
+  357 &nbsp;      * HashMap.  Returns null if the HashMap contains no mapping
+  358 &nbsp;      * for the key.
+  359 &nbsp;      */
+  360 &nbsp;     final Entry&lt;K,V&gt; getEntry(Object key) {
+</a><a name="361">  361 &nbsp;         int hash = (key == null) ? 0 : hash(key.hashCode());
+  362 &nbsp;         for (Entry&lt;K,V&gt; e = table[indexFor(hash, table.length)];
+  363 &nbsp;              e != null;
+  364 &nbsp;              e = e.next) {
+  365 &nbsp;             Object k;
+  366 &nbsp;             if (e.hash == hash &amp;&amp;
+  367 &nbsp;                 ((k = e.key) == key || (key != null &amp;&amp; key.equals(k))))
+  368 &nbsp;                 return e;
+  369 &nbsp;         }
+  370 &nbsp;         return null;
+</a><a name="371">  371 &nbsp;     }
+  372 &nbsp; 
+  373 &nbsp; 
+  374 &nbsp;     /**
+  375 &nbsp;      * Associates the specified value with the specified key in this map.
+  376 &nbsp;      * If the map previously contained a mapping for the key, the old
+  377 &nbsp;      * value is replaced.
+  378 &nbsp;      *
+  379 &nbsp;      * @param key key with which the specified value is to be associated
+  380 &nbsp;      * @param value value to be associated with the specified key
+</a><a name="381">  381 &nbsp;      * @return the previous value associated with &lt;tt&gt;key&lt;/tt&gt;, or
+  382 &nbsp;      *         &lt;tt&gt;null&lt;/tt&gt; if there was no mapping for &lt;tt&gt;key&lt;/tt&gt;.
+  383 &nbsp;      *         (A &lt;tt&gt;null&lt;/tt&gt; return can also indicate that the map
+  384 &nbsp;      *         previously associated &lt;tt&gt;null&lt;/tt&gt; with &lt;tt&gt;key&lt;/tt&gt;.)
+  385 &nbsp;      */
+  386 &nbsp;     public V put(K key, V value) {
+  387 &nbsp;         if (key == null)
+  388 &nbsp;             return putForNullKey(value);
+  389 &nbsp;         int hash = hash(key.hashCode());
+  390 &nbsp;         int i = indexFor(hash, table.length);
+</a><a name="391">  391 &nbsp;         for (Entry&lt;K,V&gt; e = table[i]; e != null; e = e.next) {
+  392 &nbsp;             Object k;
+  393 &nbsp;             if (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k))) {
+  394 &nbsp;                 V oldValue = e.value;
+  395 &nbsp;                 e.value = value;
+  396 &nbsp;                 e.recordAccess(this);
+  397 &nbsp;                 return oldValue;
+  398 &nbsp;             }
+  399 &nbsp;         }
+  400 &nbsp; 
+</a><a name="401">  401 &nbsp;         modCount++;
+  402 &nbsp;         addEntry(hash, key, value, i);
+  403 &nbsp;         return null;
+  404 &nbsp;     }
+  405 &nbsp; 
+  406 &nbsp;     /**
+  407 &nbsp;      * Offloaded version of put for null keys
+  408 &nbsp;      */
+  409 &nbsp;     private V putForNullKey(V value) {
+  410 &nbsp;         for (Entry&lt;K,V&gt; e = table[0]; e != null; e = e.next) {
+</a><a name="411">  411 &nbsp;             if (e.key == null) {
+  412 &nbsp;                 V oldValue = e.value;
+  413 &nbsp;                 e.value = value;
+  414 &nbsp;                 e.recordAccess(this);
+  415 &nbsp;                 return oldValue;
+  416 &nbsp;             }
+  417 &nbsp;         }
+  418 &nbsp;         modCount++;
+  419 &nbsp;         addEntry(0, null, value, 0);
+  420 &nbsp;         return null;
+</a><a name="421">  421 &nbsp;     }
+  422 &nbsp; 
+  423 &nbsp;     /**
+  424 &nbsp;      * This method is used instead of put by constructors and
+  425 &nbsp;      * pseudoconstructors (clone, readObject).  It does not resize the table,
+  426 &nbsp;      * check for comodification, etc.  It calls createEntry rather than
+  427 &nbsp;      * addEntry.
+  428 &nbsp;      */
+  429 &nbsp;     private void putForCreate(K key, V value) {
+  430 &nbsp;         int hash = (key == null) ? 0 : hash(key.hashCode());
+</a><a name="431">  431 &nbsp;         int i = indexFor(hash, table.length);
+  432 &nbsp; 
+  433 &nbsp;         /**
+  434 &nbsp;          * Look for preexisting entry for key.  This will never happen for
+  435 &nbsp;          * clone or deserialize.  It will only happen for construction if the
+  436 &nbsp;          * input Map is a sorted map whose ordering is inconsistent w/ equals.
+  437 &nbsp;          */
+  438 &nbsp;         for (Entry&lt;K,V&gt; e = table[i]; e != null; e = e.next) {
+  439 &nbsp;             Object k;
+  440 &nbsp;             if (e.hash == hash &amp;&amp;
+</a><a name="441">  441 &nbsp;                 ((k = e.key) == key || (key != null &amp;&amp; key.equals(k)))) {
+  442 &nbsp;                 e.value = value;
+  443 &nbsp;                 return;
+  444 &nbsp;             }
+  445 &nbsp;         }
+  446 &nbsp; 
+  447 &nbsp;         createEntry(hash, key, value, i);
+  448 &nbsp;     }
+  449 &nbsp; 
+  450 &nbsp;     private void putAllForCreate(Map&lt;? extends K, ? extends V&gt; m) {
+</a><a name="451">  451 &nbsp;         for (Map.Entry&lt;? extends K, ? extends V&gt; e : m.entrySet())
+  452 &nbsp;             putForCreate(e.getKey(), e.getValue());
+  453 &nbsp;     }
+  454 &nbsp; 
+  455 &nbsp;     /**
+  456 &nbsp;      * Rehashes the contents of this map into a new array with a
+  457 &nbsp;      * larger capacity.  This method is called automatically when the
+  458 &nbsp;      * number of keys in this map reaches its threshold.
+  459 &nbsp;      *
+  460 &nbsp;      * If current capacity is MAXIMUM_CAPACITY, this method does not
+</a><a name="461">  461 &nbsp;      * resize the map, but sets threshold to Integer.MAX_VALUE.
+  462 &nbsp;      * This has the effect of preventing future calls.
+  463 &nbsp;      *
+  464 &nbsp;      * @param newCapacity the new capacity, MUST be a power of two;
+  465 &nbsp;      *        must be greater than current capacity unless current
+  466 &nbsp;      *        capacity is MAXIMUM_CAPACITY (in which case value
+  467 &nbsp;      *        is irrelevant).
+  468 &nbsp;      */
+  469 &nbsp;     void resize(int newCapacity) {
+  470 &nbsp;         Entry[] oldTable = table;
+</a><a name="471">  471 &nbsp;         int oldCapacity = oldTable.length;
+  472 &nbsp;         if (oldCapacity == MAXIMUM_CAPACITY) {
+  473 &nbsp;             threshold = Integer.MAX_VALUE;
+  474 &nbsp;             return;
+  475 &nbsp;         }
+  476 &nbsp; 
+  477 &nbsp;         Entry[] newTable = new Entry[newCapacity];
+  478 &nbsp;         transfer(newTable);
+  479 &nbsp;         table = newTable;
+  480 &nbsp;         threshold = (int)(newCapacity * loadFactor);
+</a><a name="481">  481 &nbsp;     }
+  482 &nbsp; 
+  483 &nbsp;     /**
+  484 &nbsp;      * Transfers all entries from current table to newTable.
+  485 &nbsp;      */
+  486 &nbsp;     void transfer(Entry[] newTable) {
+  487 &nbsp;         Entry[] src = table;
+  488 &nbsp;         int newCapacity = newTable.length;
+  489 &nbsp;         for (int j = 0; j &lt; src.length; j++) {
+  490 &nbsp;             Entry&lt;K,V&gt; e = src[j];
+</a><a name="491">  491 &nbsp;             if (e != null) {
+  492 &nbsp;                 src[j] = null;
+  493 &nbsp;                 do {
+  494 &nbsp;                     Entry&lt;K,V&gt; next = e.next;
+  495 &nbsp;                     int i = indexFor(e.hash, newCapacity);
+  496 &nbsp;                     e.next = newTable[i];
+  497 &nbsp;                     newTable[i] = e;
+  498 &nbsp;                     e = next;
+  499 &nbsp;                 } while (e != null);
+  500 &nbsp;             }
+</a><a name="501">  501 &nbsp;         }
+  502 &nbsp;     }
+  503 &nbsp; 
+  504 &nbsp;     /**
+  505 &nbsp;      * Copies all of the mappings from the specified map to this map.
+  506 &nbsp;      * These mappings will replace any mappings that this map had for
+  507 &nbsp;      * any of the keys currently in the specified map.
+  508 &nbsp;      *
+  509 &nbsp;      * @param m mappings to be stored in this map
+  510 &nbsp;      * @throws NullPointerException if the specified map is null
+</a><a name="511">  511 &nbsp;      */
+  512 &nbsp;     public void putAll(Map&lt;? extends K, ? extends V&gt; m) {
+  513 &nbsp;         int numKeysToBeAdded = m.size();
+  514 &nbsp;         if (numKeysToBeAdded == 0)
+  515 &nbsp;             return;
+  516 &nbsp; 
+  517 &nbsp;         /*
+  518 &nbsp;          * Expand the map if the map if the number of mappings to be added
+  519 &nbsp;          * is greater than or equal to threshold.  This is conservative; the
+  520 &nbsp;          * obvious condition is (m.size() + size) &gt;= threshold, but this
+</a><a name="521">  521 &nbsp;          * condition could result in a map with twice the appropriate capacity,
+  522 &nbsp;          * if the keys to be added overlap with the keys already in this map.
+  523 &nbsp;          * By using the conservative calculation, we subject ourself
+  524 &nbsp;          * to at most one extra resize.
+  525 &nbsp;          */
+  526 &nbsp;         if (numKeysToBeAdded &gt; threshold) {
+  527 &nbsp;             int targetCapacity = (int)(numKeysToBeAdded / loadFactor + 1);
+  528 &nbsp;             if (targetCapacity &gt; MAXIMUM_CAPACITY)
+  529 &nbsp;                 targetCapacity = MAXIMUM_CAPACITY;
+  530 &nbsp;             int newCapacity = table.length;
+</a><a name="531">  531 &nbsp;             while (newCapacity &lt; targetCapacity)
+  532 &nbsp;                 newCapacity &lt;&lt;= 1;
+  533 &nbsp;             if (newCapacity &gt; table.length)
+  534 &nbsp;                 resize(newCapacity);
+  535 &nbsp;         }
+  536 &nbsp; 
+  537 &nbsp;         for (Map.Entry&lt;? extends K, ? extends V&gt; e : m.entrySet())
+  538 &nbsp;             put(e.getKey(), e.getValue());
+  539 &nbsp;     }
+  540 &nbsp; 
+</a><a name="541">  541 &nbsp;     /**
+  542 &nbsp;      * Removes the mapping for the specified key from this map if present.
+  543 &nbsp;      *
+  544 &nbsp;      * @param  key key whose mapping is to be removed from the map
+  545 &nbsp;      * @return the previous value associated with &lt;tt&gt;key&lt;/tt&gt;, or
+  546 &nbsp;      *         &lt;tt&gt;null&lt;/tt&gt; if there was no mapping for &lt;tt&gt;key&lt;/tt&gt;.
+  547 &nbsp;      *         (A &lt;tt&gt;null&lt;/tt&gt; return can also indicate that the map
+  548 &nbsp;      *         previously associated &lt;tt&gt;null&lt;/tt&gt; with &lt;tt&gt;key&lt;/tt&gt;.)
+  549 &nbsp;      */
+  550 &nbsp;     public V remove(Object key) {
+</a><a name="551">  551 &nbsp;         Entry&lt;K,V&gt; e = removeEntryForKey(key);
+  552 &nbsp;         return (e == null ? null : e.value);
+  553 &nbsp;     }
+  554 &nbsp; 
+  555 &nbsp;     /**
+  556 &nbsp;      * Removes and returns the entry associated with the specified key
+  557 &nbsp;      * in the HashMap.  Returns null if the HashMap contains no mapping
+  558 &nbsp;      * for this key.
+  559 &nbsp;      */
+  560 &nbsp;     final Entry&lt;K,V&gt; removeEntryForKey(Object key) {
+</a><a name="561">  561 &nbsp;         int hash = (key == null) ? 0 : hash(key.hashCode());
+  562 &nbsp;         int i = indexFor(hash, table.length);
+  563 &nbsp;         Entry&lt;K,V&gt; prev = table[i];
+  564 &nbsp;         Entry&lt;K,V&gt; e = prev;
+  565 &nbsp; 
+  566 &nbsp;         while (e != null) {
+  567 &nbsp;             Entry&lt;K,V&gt; next = e.next;
+  568 &nbsp;             Object k;
+  569 &nbsp;             if (e.hash == hash &amp;&amp;
+  570 &nbsp;                 ((k = e.key) == key || (key != null &amp;&amp; key.equals(k)))) {
+</a><a name="571">  571 &nbsp;                 modCount++;
+  572 &nbsp;                 size--;
+  573 &nbsp;                 if (prev == e)
+  574 &nbsp;                     table[i] = next;
+  575 &nbsp;                 else
+  576 &nbsp;                     prev.next = next;
+  577 &nbsp;                 e.recordRemoval(this);
+  578 &nbsp;                 return e;
+  579 &nbsp;             }
+  580 &nbsp;             prev = e;
+</a><a name="581">  581 &nbsp;             e = next;
+  582 &nbsp;         }
+  583 &nbsp; 
+  584 &nbsp;         return e;
+  585 &nbsp;     }
+  586 &nbsp; 
+  587 &nbsp;     /**
+  588 &nbsp;      * Special version of remove for EntrySet.
+  589 &nbsp;      */
+  590 &nbsp;     final Entry&lt;K,V&gt; removeMapping(Object o) {
+</a><a name="591">  591 &nbsp;         if (!(o instanceof Map.Entry))
+  592 &nbsp;             return null;
+  593 &nbsp; 
+  594 &nbsp;         Map.Entry&lt;K,V&gt; entry = (Map.Entry&lt;K,V&gt;) o;
+  595 &nbsp;         Object key = entry.getKey();
+  596 &nbsp;         int hash = (key == null) ? 0 : hash(key.hashCode());
+  597 &nbsp;         int i = indexFor(hash, table.length);
+  598 &nbsp;         Entry&lt;K,V&gt; prev = table[i];
+  599 &nbsp;         Entry&lt;K,V&gt; e = prev;
+  600 &nbsp; 
+</a><a name="601">  601 &nbsp;         while (e != null) {
+  602 &nbsp;             Entry&lt;K,V&gt; next = e.next;
+  603 &nbsp;             if (e.hash == hash &amp;&amp; e.equals(entry)) {
+  604 &nbsp;                 modCount++;
+  605 &nbsp;                 size--;
+  606 &nbsp;                 if (prev == e)
+  607 &nbsp;                     table[i] = next;
+  608 &nbsp;                 else
+  609 &nbsp;                     prev.next = next;
+  610 &nbsp;                 e.recordRemoval(this);
+</a><a name="611">  611 &nbsp;                 return e;
+  612 &nbsp;             }
+  613 &nbsp;             prev = e;
+  614 &nbsp;             e = next;
+  615 &nbsp;         }
+  616 &nbsp; 
+  617 &nbsp;         return e;
+  618 &nbsp;     }
+  619 &nbsp; 
+  620 &nbsp;     /**
+</a><a name="621">  621 &nbsp;      * Removes all of the mappings from this map.
+  622 &nbsp;      * The map will be empty after this call returns.
+  623 &nbsp;      */
+  624 &nbsp;     public void clear() {
+  625 &nbsp;         modCount++;
+  626 &nbsp;         Entry[] tab = table;
+  627 &nbsp;         for (int i = 0; i &lt; tab.length; i++)
+  628 &nbsp;             tab[i] = null;
+  629 &nbsp;         size = 0;
+  630 &nbsp;     }
+</a><a name="631">  631 &nbsp; 
+  632 &nbsp;     /**
+  633 &nbsp;      * Returns &lt;tt&gt;true&lt;/tt&gt; if this map maps one or more keys to the
+  634 &nbsp;      * specified value.
+  635 &nbsp;      *
+  636 &nbsp;      * @param value value whose presence in this map is to be tested
+  637 &nbsp;      * @return &lt;tt&gt;true&lt;/tt&gt; if this map maps one or more keys to the
+  638 &nbsp;      *         specified value
+  639 &nbsp;      */
+  640 &nbsp;     public boolean containsValue(Object value) {
+</a><a name="641">  641 &nbsp;         if (value == null)
+  642 &nbsp;             return containsNullValue();
+  643 &nbsp; 
+  644 &nbsp;         Entry[] tab = table;
+  645 &nbsp;         for (int i = 0; i &lt; tab.length ; i++)
+  646 &nbsp;             for (Entry e = tab[i] ; e != null ; e = e.next)
+  647 &nbsp;                 if (value.equals(e.value))
+  648 &nbsp;                     return true;
+  649 &nbsp;         return false;
+  650 &nbsp;     }
+</a><a name="651">  651 &nbsp; 
+  652 &nbsp;     /**
+  653 &nbsp;      * Special-case code for containsValue with null argument
+  654 &nbsp;      */
+  655 &nbsp;     private boolean containsNullValue() {
+  656 &nbsp;         Entry[] tab = table;
+  657 &nbsp;         for (int i = 0; i &lt; tab.length ; i++)
+  658 &nbsp;             for (Entry e = tab[i] ; e != null ; e = e.next)
+  659 &nbsp;                 if (e.value == null)
+  660 &nbsp;                     return true;
+</a><a name="661">  661 &nbsp;         return false;
+  662 &nbsp;     }
+  663 &nbsp; 
+  664 &nbsp;     /**
+  665 &nbsp;      * Returns a shallow copy of this &lt;tt&gt;HashMap&lt;/tt&gt; instance: the keys and
+  666 &nbsp;      * values themselves are not cloned.
+  667 &nbsp;      *
+  668 &nbsp;      * @return a shallow copy of this map
+  669 &nbsp;      */
+  670 &nbsp;     public Object clone() {
+</a><a name="671">  671 &nbsp;         HashMap&lt;K,V&gt; result = null;
+  672 &nbsp;         try {
+  673 &nbsp;             result = (HashMap&lt;K,V&gt;)super.clone();
+  674 &nbsp;         } catch (CloneNotSupportedException e) {
+  675 &nbsp;             // assert false;
+  676 &nbsp;         }
+  677 &nbsp;         result.table = new Entry[table.length];
+  678 &nbsp;         result.entrySet = null;
+  679 &nbsp;         result.modCount = 0;
+  680 &nbsp;         result.size = 0;
+</a><a name="681">  681 &nbsp;         result.init();
+  682 &nbsp;         result.putAllForCreate(this);
+  683 &nbsp; 
+  684 &nbsp;         return result;
+  685 &nbsp;     }
+  686 &nbsp; 
+  687 &nbsp;     static class Entry&lt;K,V&gt; implements Map.Entry&lt;K,V&gt; {
+  688 &nbsp;         final K key;
+  689 &nbsp;         V value;
+  690 &nbsp;         Entry&lt;K,V&gt; next;
+</a><a name="691">  691 &nbsp;         final int hash;
+  692 &nbsp; 
+  693 &nbsp;         /**
+  694 &nbsp;          * Creates new entry.
+  695 &nbsp;          */
+  696 &nbsp;         Entry(int h, K k, V v, Entry&lt;K,V&gt; n) {
+  697 &nbsp;             value = v;
+  698 &nbsp;             next = n;
+  699 &nbsp;             key = k;
+  700 &nbsp;             hash = h;
+</a><a name="701">  701 &nbsp;         }
+  702 &nbsp; 
+  703 &nbsp;         public final K getKey() {
+  704 &nbsp;             return key;
+  705 &nbsp;         }
+  706 &nbsp; 
+  707 &nbsp;         public final V getValue() {
+  708 &nbsp;             return value;
+  709 &nbsp;         }
+  710 &nbsp; 
+</a><a name="711">  711 &nbsp;         public final V setValue(V newValue) {
+  712 &nbsp;             V oldValue = value;
+  713 &nbsp;             value = newValue;
+  714 &nbsp;             return oldValue;
+  715 &nbsp;         }
+  716 &nbsp; 
+  717 &nbsp;         public final boolean equals(Object o) {
+  718 &nbsp;             if (!(o instanceof Map.Entry))
+  719 &nbsp;                 return false;
+  720 &nbsp;             Map.Entry e = (Map.Entry)o;
+</a><a name="721">  721 &nbsp;             Object k1 = getKey();
+  722 &nbsp;             Object k2 = e.getKey();
+  723 &nbsp;             if (k1 == k2 || (k1 != null &amp;&amp; k1.equals(k2))) {
+  724 &nbsp;                 Object v1 = getValue();
+  725 &nbsp;                 Object v2 = e.getValue();
+  726 &nbsp;                 if (v1 == v2 || (v1 != null &amp;&amp; v1.equals(v2)))
+  727 &nbsp;                     return true;
+  728 &nbsp;             }
+  729 &nbsp;             return false;
+  730 &nbsp;         }
+</a><a name="731">  731 &nbsp; 
+  732 &nbsp;         public final int hashCode() {
+  733 &nbsp;             return (key==null   ? 0 : key.hashCode()) ^
+  734 &nbsp;                    (value==null ? 0 : value.hashCode());
+  735 &nbsp;         }
+  736 &nbsp; 
+  737 &nbsp;         public final String toString() {
+  738 &nbsp;             return getKey() + "=" + getValue();
+  739 &nbsp;         }
+  740 &nbsp; 
+</a><a name="741">  741 &nbsp;         /**
+  742 &nbsp;          * This method is invoked whenever the value in an entry is
+  743 &nbsp;          * overwritten by an invocation of put(k,v) for a key k that's already
+  744 &nbsp;          * in the HashMap.
+  745 &nbsp;          */
+  746 &nbsp;         void recordAccess(HashMap&lt;K,V&gt; m) {
+  747 &nbsp;         }
+  748 &nbsp; 
+  749 &nbsp;         /**
+  750 &nbsp;          * This method is invoked whenever the entry is
+</a><a name="751">  751 &nbsp;          * removed from the table.
+  752 &nbsp;          */
+  753 &nbsp;         void recordRemoval(HashMap&lt;K,V&gt; m) {
+  754 &nbsp;         }
+  755 &nbsp;     }
+  756 &nbsp; 
+  757 &nbsp;     /**
+  758 &nbsp;      * Adds a new entry with the specified key, value and hash code to
+  759 &nbsp;      * the specified bucket.  It is the responsibility of this
+  760 &nbsp;      * method to resize the table if appropriate.
+</a><a name="761">  761 &nbsp;      *
+  762 &nbsp;      * Subclass overrides this to alter the behavior of put method.
+  763 &nbsp;      */
+  764 &nbsp;     void addEntry(int hash, K key, V value, int bucketIndex) {
+  765 &nbsp;         Entry&lt;K,V&gt; e = table[bucketIndex];
+  766 &nbsp;         table[bucketIndex] = new Entry&lt;&gt;(hash, key, value, e);
+  767 &nbsp;         if (size++ &gt;= threshold)
+  768 &nbsp;             resize(2 * table.length);
+  769 &nbsp;     }
+  770 &nbsp; 
+</a><a name="771">  771 &nbsp;     /**
+  772 &nbsp;      * Like addEntry except that this version is used when creating entries
+  773 &nbsp;      * as part of Map construction or "pseudo-construction" (cloning,
+  774 &nbsp;      * deserialization).  This version needn't worry about resizing the table.
+  775 &nbsp;      *
+  776 &nbsp;      * Subclass overrides this to alter the behavior of HashMap(Map),
+  777 &nbsp;      * clone, and readObject.
+  778 &nbsp;      */
+  779 &nbsp;     void createEntry(int hash, K key, V value, int bucketIndex) {
+  780 &nbsp;         Entry&lt;K,V&gt; e = table[bucketIndex];
+</a><a name="781">  781 &nbsp;         table[bucketIndex] = new Entry&lt;&gt;(hash, key, value, e);
+  782 &nbsp;         size++;
+  783 &nbsp;     }
+  784 &nbsp; 
+  785 &nbsp;     private abstract class HashIterator&lt;E&gt; implements Iterator&lt;E&gt; {
+  786 &nbsp;         Entry&lt;K,V&gt; next;        // next entry to return
+  787 &nbsp;         int expectedModCount;   // For fast-fail
+  788 &nbsp;         int index;              // current slot
+  789 &nbsp;         Entry&lt;K,V&gt; current;     // current entry
+  790 &nbsp; 
+</a><a name="791">  791 &nbsp;         HashIterator() {
+  792 &nbsp;             expectedModCount = modCount;
+  793 &nbsp;             if (size &gt; 0) { // advance to first entry
+  794 &nbsp;                 Entry[] t = table;
+  795 &nbsp;                 while (index &lt; t.length &amp;&amp; (next = t[index++]) == null)
+  796 &nbsp;                     ;
+  797 &nbsp;             }
+  798 &nbsp;         }
+  799 &nbsp; 
+  800 &nbsp;         public final boolean hasNext() {
+</a><a name="801">  801 &nbsp;             return next != null;
+  802 &nbsp;         }
+  803 &nbsp; 
+  804 &nbsp;         final Entry&lt;K,V&gt; nextEntry() {
+  805 &nbsp;             if (modCount != expectedModCount)
+  806 &nbsp;                 throw new ConcurrentModificationException();
+  807 &nbsp;             Entry&lt;K,V&gt; e = next;
+  808 &nbsp;             if (e == null)
+  809 &nbsp;                 throw new NoSuchElementException();
+  810 &nbsp; 
+</a><a name="811">  811 &nbsp;             if ((next = e.next) == null) {
+  812 &nbsp;                 Entry[] t = table;
+  813 &nbsp;                 while (index &lt; t.length &amp;&amp; (next = t[index++]) == null)
+  814 &nbsp;                     ;
+  815 &nbsp;             }
+  816 &nbsp;             current = e;
+  817 &nbsp;             return e;
+  818 &nbsp;         }
+  819 &nbsp; 
+  820 &nbsp;         public void remove() {
+</a><a name="821">  821 &nbsp;             if (current == null)
+  822 &nbsp;                 throw new IllegalStateException();
+  823 &nbsp;             if (modCount != expectedModCount)
+  824 &nbsp;                 throw new ConcurrentModificationException();
+  825 &nbsp;             Object k = current.key;
+  826 &nbsp;             current = null;
+  827 &nbsp;             HashMap.this.removeEntryForKey(k);
+  828 &nbsp;             expectedModCount = modCount;
+  829 &nbsp;         }
+  830 &nbsp; 
+</a><a name="831">  831 &nbsp;     }
+  832 &nbsp; 
+  833 &nbsp;     private final class ValueIterator extends HashIterator&lt;V&gt; {
+  834 &nbsp;         public V next() {
+  835 &nbsp;             return nextEntry().value;
+  836 &nbsp;         }
+  837 &nbsp;     }
+  838 &nbsp; 
+  839 &nbsp;     private final class KeyIterator extends HashIterator&lt;K&gt; {
+  840 &nbsp;         public K next() {
+</a><a name="841">  841 &nbsp;             return nextEntry().getKey();
+  842 &nbsp;         }
+  843 &nbsp;     }
+  844 &nbsp; 
+  845 &nbsp;     private final class EntryIterator extends HashIterator&lt;Map.Entry&lt;K,V&gt;&gt; {
+  846 &nbsp;         public Map.Entry&lt;K,V&gt; next() {
+  847 &nbsp;             return nextEntry();
+  848 &nbsp;         }
+  849 &nbsp;     }
+  850 &nbsp; 
+</a><a name="851">  851 &nbsp;     // Subclass overrides these to alter behavior of views' iterator() method
+  852 &nbsp;     Iterator&lt;K&gt; newKeyIterator()   {
+  853 &nbsp;         return new KeyIterator();
+  854 &nbsp;     }
+  855 &nbsp;     Iterator&lt;V&gt; newValueIterator()   {
+  856 &nbsp;         return new ValueIterator();
+  857 &nbsp;     }
+  858 &nbsp;     Iterator&lt;Map.Entry&lt;K,V&gt;&gt; newEntryIterator()   {
+  859 &nbsp;         return new EntryIterator();
+  860 &nbsp;     }
+</a><a name="861">  861 &nbsp; 
+  862 &nbsp; 
+  863 &nbsp;     // Views
+  864 &nbsp; 
+  865 &nbsp;     private transient Set&lt;Map.Entry&lt;K,V&gt;&gt; entrySet = null;
+  866 &nbsp; 
+  867 &nbsp;     /**
+  868 &nbsp;      * Returns a {@link Set} view of the keys contained in this map.
+  869 &nbsp;      * The set is backed by the map, so changes to the map are
+  870 &nbsp;      * reflected in the set, and vice-versa.  If the map is modified
+</a><a name="871">  871 &nbsp;      * while an iteration over the set is in progress (except through
+  872 &nbsp;      * the iterator's own &lt;tt&gt;remove&lt;/tt&gt; operation), the results of
+  873 &nbsp;      * the iteration are undefined.  The set supports element removal,
+  874 &nbsp;      * which removes the corresponding mapping from the map, via the
+  875 &nbsp;      * &lt;tt&gt;Iterator.remove&lt;/tt&gt;, &lt;tt&gt;Set.remove&lt;/tt&gt;,
+  876 &nbsp;      * &lt;tt&gt;removeAll&lt;/tt&gt;, &lt;tt&gt;retainAll&lt;/tt&gt;, and &lt;tt&gt;clear&lt;/tt&gt;
+  877 &nbsp;      * operations.  It does not support the &lt;tt&gt;add&lt;/tt&gt; or &lt;tt&gt;addAll&lt;/tt&gt;
+  878 &nbsp;      * operations.
+  879 &nbsp;      */
+  880 &nbsp;     public Set&lt;K&gt; keySet() {
+</a><a name="881">  881 &nbsp;         Set&lt;K&gt; ks = keySet;
+  882 &nbsp;         return (ks != null ? ks : (keySet = new KeySet()));
+  883 &nbsp;     }
+  884 &nbsp; 
+  885 &nbsp;     private final class KeySet extends AbstractSet&lt;K&gt; {
+  886 &nbsp;         public Iterator&lt;K&gt; iterator() {
+  887 &nbsp;             return newKeyIterator();
+  888 &nbsp;         }
+  889 &nbsp;         public int size() {
+  890 &nbsp;             return size;
+</a><a name="891">  891 &nbsp;         }
+  892 &nbsp;         public boolean contains(Object o) {
+  893 &nbsp;             return containsKey(o);
+  894 &nbsp;         }
+  895 &nbsp;         public boolean remove(Object o) {
+  896 &nbsp;             return HashMap.this.removeEntryForKey(o) != null;
+  897 &nbsp;         }
+  898 &nbsp;         public void clear() {
+  899 &nbsp;             HashMap.this.clear();
+  900 &nbsp;         }
+</a><a name="901">  901 &nbsp;     }
+  902 &nbsp; 
+  903 &nbsp;     /**
+  904 &nbsp;      * Returns a {@link Collection} view of the values contained in this map.
+  905 &nbsp;      * The collection is backed by the map, so changes to the map are
+  906 &nbsp;      * reflected in the collection, and vice-versa.  If the map is
+  907 &nbsp;      * modified while an iteration over the collection is in progress
+  908 &nbsp;      * (except through the iterator's own &lt;tt&gt;remove&lt;/tt&gt; operation),
+  909 &nbsp;      * the results of the iteration are undefined.  The collection
+  910 &nbsp;      * supports element removal, which removes the corresponding
+</a><a name="911">  911 &nbsp;      * mapping from the map, via the &lt;tt&gt;Iterator.remove&lt;/tt&gt;,
+  912 &nbsp;      * &lt;tt&gt;Collection.remove&lt;/tt&gt;, &lt;tt&gt;removeAll&lt;/tt&gt;,
+  913 &nbsp;      * &lt;tt&gt;retainAll&lt;/tt&gt; and &lt;tt&gt;clear&lt;/tt&gt; operations.  It does not
+  914 &nbsp;      * support the &lt;tt&gt;add&lt;/tt&gt; or &lt;tt&gt;addAll&lt;/tt&gt; operations.
+  915 &nbsp;      */
+  916 &nbsp;     public Collection&lt;V&gt; values() {
+  917 &nbsp;         Collection&lt;V&gt; vs = values;
+  918 &nbsp;         return (vs != null ? vs : (values = new Values()));
+  919 &nbsp;     }
+  920 &nbsp; 
+</a><a name="921">  921 &nbsp;     private final class Values extends AbstractCollection&lt;V&gt; {
+  922 &nbsp;         public Iterator&lt;V&gt; iterator() {
+  923 &nbsp;             return newValueIterator();
+  924 &nbsp;         }
+  925 &nbsp;         public int size() {
+  926 &nbsp;             return size;
+  927 &nbsp;         }
+  928 &nbsp;         public boolean contains(Object o) {
+  929 &nbsp;             return containsValue(o);
+  930 &nbsp;         }
+</a><a name="931">  931 &nbsp;         public void clear() {
+  932 &nbsp;             HashMap.this.clear();
+  933 &nbsp;         }
+  934 &nbsp;     }
+  935 &nbsp; 
+  936 &nbsp;     /**
+  937 &nbsp;      * Returns a {@link Set} view of the mappings contained in this map.
+  938 &nbsp;      * The set is backed by the map, so changes to the map are
+  939 &nbsp;      * reflected in the set, and vice-versa.  If the map is modified
+  940 &nbsp;      * while an iteration over the set is in progress (except through
+</a><a name="941">  941 &nbsp;      * the iterator's own &lt;tt&gt;remove&lt;/tt&gt; operation, or through the
+  942 &nbsp;      * &lt;tt&gt;setValue&lt;/tt&gt; operation on a map entry returned by the
+  943 &nbsp;      * iterator) the results of the iteration are undefined.  The set
+  944 &nbsp;      * supports element removal, which removes the corresponding
+  945 &nbsp;      * mapping from the map, via the &lt;tt&gt;Iterator.remove&lt;/tt&gt;,
+  946 &nbsp;      * &lt;tt&gt;Set.remove&lt;/tt&gt;, &lt;tt&gt;removeAll&lt;/tt&gt;, &lt;tt&gt;retainAll&lt;/tt&gt; and
+  947 &nbsp;      * &lt;tt&gt;clear&lt;/tt&gt; operations.  It does not support the
+  948 &nbsp;      * &lt;tt&gt;add&lt;/tt&gt; or &lt;tt&gt;addAll&lt;/tt&gt; operations.
+  949 &nbsp;      *
+  950 &nbsp;      * @return a set view of the mappings contained in this map
+</a><a name="951">  951 &nbsp;      */
+  952 &nbsp;     public Set&lt;Map.Entry&lt;K,V&gt;&gt; entrySet() {
+  953 &nbsp;         return entrySet0();
+  954 &nbsp;     }
+  955 &nbsp; 
+  956 &nbsp;     private Set&lt;Map.Entry&lt;K,V&gt;&gt; entrySet0() {
+  957 &nbsp;         Set&lt;Map.Entry&lt;K,V&gt;&gt; es = entrySet;
+  958 &nbsp;         return es != null ? es : (entrySet = new EntrySet());
+  959 &nbsp;     }
+  960 &nbsp; 
+</a><a name="961">  961 &nbsp;     private final class EntrySet extends AbstractSet&lt;Map.Entry&lt;K,V&gt;&gt; {
+  962 &nbsp;         public Iterator&lt;Map.Entry&lt;K,V&gt;&gt; iterator() {
+  963 &nbsp;             return newEntryIterator();
+  964 &nbsp;         }
+  965 &nbsp;         public boolean contains(Object o) {
+  966 &nbsp;             if (!(o instanceof Map.Entry))
+  967 &nbsp;                 return false;
+  968 &nbsp;             Map.Entry&lt;K,V&gt; e = (Map.Entry&lt;K,V&gt;) o;
+  969 &nbsp;             Entry&lt;K,V&gt; candidate = getEntry(e.getKey());
+  970 &nbsp;             return candidate != null &amp;&amp; candidate.equals(e);
+</a><a name="971">  971 &nbsp;         }
+  972 &nbsp;         public boolean remove(Object o) {
+  973 &nbsp;             return removeMapping(o) != null;
+  974 &nbsp;         }
+  975 &nbsp;         public int size() {
+  976 &nbsp;             return size;
+  977 &nbsp;         }
+  978 &nbsp;         public void clear() {
+  979 &nbsp;             HashMap.this.clear();
+  980 &nbsp;         }
+</a><a name="981">  981 &nbsp;     }
+  982 &nbsp; 
+  983 &nbsp;     /**
+  984 &nbsp;      * Save the state of the &lt;tt&gt;HashMap&lt;/tt&gt; instance to a stream (i.e.,
+  985 &nbsp;      * serialize it).
+  986 &nbsp;      *
+  987 &nbsp;      * @serialData The &lt;i&gt;capacity&lt;/i&gt; of the HashMap (the length of the
+  988 &nbsp;      *             bucket array) is emitted (int), followed by the
+  989 &nbsp;      *             &lt;i&gt;size&lt;/i&gt; (an int, the number of key-value
+  990 &nbsp;      *             mappings), followed by the key (Object) and value (Object)
+</a><a name="991">  991 &nbsp;      *             for each key-value mapping.  The key-value mappings are
+  992 &nbsp;      *             emitted in no particular order.
+  993 &nbsp;      */
+  994 &nbsp;     private void writeObject(java.io.ObjectOutputStream s)
+  995 &nbsp;         throws IOException
+  996 &nbsp;     {
+  997 &nbsp;         Iterator&lt;Map.Entry&lt;K,V&gt;&gt; i =
+  998 &nbsp;             (size &gt; 0) ? entrySet0().iterator() : null;
+  999 &nbsp; 
+ 1000 &nbsp;         // Write out the threshold, loadfactor, and any hidden stuff
+</a><a name="1001"> 1001 &nbsp;         s.defaultWriteObject();
+ 1002 &nbsp; 
+ 1003 &nbsp;         // Write out number of buckets
+ 1004 &nbsp;         s.writeInt(table.length);
+ 1005 &nbsp; 
+ 1006 &nbsp;         // Write out size (number of Mappings)
+ 1007 &nbsp;         s.writeInt(size);
+ 1008 &nbsp; 
+ 1009 &nbsp;         // Write out keys and values (alternating)
+ 1010 &nbsp;         if (i != null) {
+</a><a name="1011"> 1011 &nbsp;             while (i.hasNext()) {
+ 1012 &nbsp;                 Map.Entry&lt;K,V&gt; e = i.next();
+ 1013 &nbsp;                 s.writeObject(e.getKey());
+ 1014 &nbsp;                 s.writeObject(e.getValue());
+ 1015 &nbsp;             }
+ 1016 &nbsp;         }
+ 1017 &nbsp;     }
+ 1018 &nbsp; 
+ 1019 &nbsp;     private static final long serialVersionUID = 362498820763181265L;
+ 1020 &nbsp; 
+</a><a name="1021"> 1021 &nbsp;     /**
+ 1022 &nbsp;      * Reconstitute the &lt;tt&gt;HashMap&lt;/tt&gt; instance from a stream (i.e.,
+ 1023 &nbsp;      * deserialize it).
+ 1024 &nbsp;      */
+ 1025 &nbsp;     private void readObject(java.io.ObjectInputStream s)
+ 1026 &nbsp;          throws IOException, ClassNotFoundException
+ 1027 &nbsp;     {
+ 1028 &nbsp;         // Read in the threshold, loadfactor, and any hidden stuff
+ 1029 &nbsp;         s.defaultReadObject();
+ 1030 &nbsp; 
+</a><a name="1031"> 1031 &nbsp;         // Read in number of buckets and allocate the bucket array;
+ 1032 &nbsp;         int numBuckets = s.readInt();
+ 1033 &nbsp;         table = new Entry[numBuckets];
+ 1034 &nbsp; 
+ 1035 &nbsp;         init();  // Give subclass a chance to do its thing.
+ 1036 &nbsp; 
+ 1037 &nbsp;         // Read in size (number of Mappings)
+ 1038 &nbsp;         int size = s.readInt();
+ 1039 &nbsp; 
+ 1040 &nbsp;         // Read the keys and values, and put the mappings in the HashMap
+</a><a name="1041"> 1041 &nbsp;         for (int i=0; i&lt;size; i++) {
+ 1042 &nbsp;             K key = (K) s.readObject();
+ 1043 &nbsp;             V value = (V) s.readObject();
+ 1044 &nbsp;             putForCreate(key, value);
+ 1045 &nbsp;         }
+ 1046 &nbsp;     }
+ 1047 &nbsp; 
+ 1048 &nbsp;     // These methods are used when serializing HashSets
+ 1049 &nbsp;     int   capacity()     { return table.length; }
+ 1050 &nbsp;     float loadFactor()   { return loadFactor;   }
+</a><a name="1051"> 1051 &nbsp; }
+
+</a></pre><a name="1051">
+</a><div style="width:100%;background-color:#ddeeff;border:1px solid #ccddee;margin:0 0 0 0;padding:2px 2px 2px 2px"><a name="1051">
+</a><div style="float:right"><a name="1051"></a><a href="http://del.icio.us/post" onclick="window.open(&#39;http://del.icio.us/post?v=4&amp;noui&amp;jump=close&amp;url=&#39;+encodeURIComponent(location.href)+&#39;&amp;title=&#39;+encodeURIComponent(document.title), &#39;delicious&#39;,&#39;toolbar=no,width=700,height=400&#39;); return false;"><img src="./java.util.HashMap.java_files/delicious.small.gif" border="0"> Save This Page</a></div>
+<a href="http://www.docjar.com/">Home</a> » <a href="http://www.docjar.com/projects/openjdk-7-java.html">openjdk-7</a> » java »  <a href="http://www.docjar.com/docs/api/java/util/package-index.html">util</a> » 
+ [<a href="http://www.docjar.com/docs/api/java/util/HashMap.html">javadoc</a> | source]
+</div>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script><script src="./java.util.HashMap.java_files/ga.js" type="text/javascript"></script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-138120-1");
+pageTracker._trackPageview();
+</script>
+
+
+
+
+
+
+
+
+<!-- end --></body></html>
