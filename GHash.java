@@ -76,8 +76,8 @@ public class GHash<K,V> {
 	static final int DEFAULT_INITIAL_CAPACITY = 16;		
 	//static final int MAXIMUM_CAPACITY = 1 << 30;
 	static final float DEFAULT_LOAD_FACTOR = 0.75f;
-	Entry[] table;
-	int size;
+	private Entry[] table;
+	private int size;
 
 	public <K,V> GHash() {
 		this(DEFAULT_INITIAL_CAPACITY);
