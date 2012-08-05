@@ -1,9 +1,45 @@
 @SuppressWarnings({"unchecked"})
 public class GHash<K,V> {
 	public static void main(final String[] args) {
-		for(int i=1; i<10; i++) {
+		testDefaultConstructor();
+		testHashFilling();
+		testHashResizing();
+		System.out.println();
+	}
+
+	public static void testDefaultConstructor() {
+		expectEqual(DEFAULT_INITIAL_CAPACITY, (new GHash()).capacity());
+	}
+
+	public static void testHashResizing() {
+		GHash<String,String> growingHash = new GHash<String,String>(1);
+		expectEqual(growingHash.size(), 0);
+		expectEqual(growingHash.capacity(), 1);
+
+		growingHash.put("a","b");
+		expectEqual(growingHash.size(), 1);
+		expectEqual(growingHash.capacity(), 2);
+
+		growingHash.put("b","c");
+		expectEqual(growingHash.size(), 2);
+		expectEqual(growingHash.capacity(), 4);
+
+		growingHash.put("c","d");
+		expectEqual(growingHash.size(), 3);
+		expectEqual(growingHash.capacity(), 4);
+
+		growingHash.put("d","e");
+		expectEqual(growingHash.size(), 4);
+		expectEqual(growingHash.capacity(), 8);
+
+		growingHash.put("e","f");
+		expectEqual(growingHash.size(), 5);
+		expectEqual(growingHash.capacity(), 8);
+	}
+
+	public static void testHashFilling() {
+		for(int i=1; i<10; i++)
 			testHash(i);
-		}
 	}
 
 	public static void testHash(int capacity) {
@@ -19,38 +55,50 @@ public class GHash<K,V> {
 		expectEqual(ghash.get("c"), "d");
 		expectEqual(ghash.get("d"), "e");
 		expectEqual(ghash.get("e"), "f");
-		System.out.println();
-		System.out.println(ghash);
+	}
+
+	public static void expectEqual(int actual, int expected) {
+		if(actual == expected) {
+			System.out.print(".");
+		} else {
+			System.out.println("failed actual:" + actual + " expected:" + expected);
+		}
 	}
 
 	public static void expectEqual(String actual, String expected) {
 		if(actual != null && expected != null && actual.equals(expected)) {
 			System.out.print(".");
 		} else {
-			System.out.println("failed expected:" + expected + " actual:" + actual);
+			System.out.println("failed actual:" + actual + " expected:" + expected);
 		}
 	}
 
 	static final int DEFAULT_INITIAL_CAPACITY = 16;		
 	//static final int MAXIMUM_CAPACITY = 1 << 30;
-	//static final float DEFAULT_LOAD_FACTOR = 0.75f;
+	static final float DEFAULT_LOAD_FACTOR = 0.75f;
 	Entry[] table;
-	//int size;
+	int size;
 
 	public <K,V> GHash() {
-		//size = 0;
-		table = new Entry[DEFAULT_INITIAL_CAPACITY];
+		this(DEFAULT_INITIAL_CAPACITY);
 	}
 
 	public <K,V> GHash(int initialCapacity) {
+		size = 0;
 		table = new Entry[initialCapacity];
 	}
 
 	public GHash<K,V> put(K key, V value) {
-		int index = key.hashCode() % table.length;
+		if(size + 1 > table.length * DEFAULT_LOAD_FACTOR) resize();
+		putWithoutCapacityCheck(key, value);
+		return this;
+	}
+
+	private void putWithoutCapacityCheck(K key, V value) {
+		size++;
+		int index = indexFor(key);
 		Entry<K,V> previous = table[index];
 		table[index] = new Entry<K,V>(key, value, table[index]);
-		return this;
 	}
 
 	public V get(K key) {
@@ -59,6 +107,29 @@ public class GHash<K,V> {
 			if(e.key.equals(key)) return e.value;
 		}
 		return null;
+	}
+
+	public int size() {
+		return size;
+	}
+
+	public int capacity() {
+		return table.length;
+	}
+
+	private int indexFor(K key) {
+		return key.hashCode() % table.length;
+	}
+
+	private void resize() {
+		GHash<K,V> newHash = new GHash<K,V>(capacity() * 2);
+		for(Entry<K,V> e : table) {
+			for(; e != null; e = e.next) {
+				newHash.putWithoutCapacityCheck(e.key, e.value);
+			}
+		}
+		size = newHash.size();
+		table = newHash.table;
 	}
 
 	public String toString() {
