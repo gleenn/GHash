@@ -1,0 +1,3 @@
+A re-implementation of a hash table in Java with O(log(n)) performance on most operations.
+
+run: ./build to run all tests
